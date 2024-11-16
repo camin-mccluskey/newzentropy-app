@@ -1,23 +1,35 @@
-import { ThumbsDownIcon, ThumbsUpIcon } from "lucide-react";
+import { ExternalLinkIcon, ThumbsDownIcon, ThumbsUpIcon } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
+import { type Story } from "../data/types";
+import Link from "next/link";
 
-export function Story() {
+type StoryProps = {
+  story: Story
+}
+
+export function Story({ story }: StoryProps) {
   return (
    <Card>
     <CardHeader>
-      <CardTitle>Super cool news story</CardTitle>
+      <CardTitle>{story.title}</CardTitle>
       </CardHeader>
     <CardContent>
-      <CardDescription>This is a super cool news story</CardDescription>
+      <CardDescription>{story.description}</CardDescription>
     </CardContent>
-    <CardFooter className="flex gap-2 items-center place-self-end">
-      <Button size="icon" variant="default">
-        <ThumbsUpIcon/>
-      </Button>
-      <Button size="icon" variant="destructive">
-        <ThumbsDownIcon/>
-      </Button>
+    <CardFooter className="flex gap-2 items-end justify-between">
+        <Link href={story.url} className="text-secondary-foreground hover:text-primary transition-colors inline-flex items-center gap-1">
+          View story
+          <ExternalLinkIcon className="size-4" />
+        </Link>
+      <span className="inline-flex gap-2">
+        <Button size="icon" variant="default">
+          <ThumbsUpIcon/>
+        </Button>
+        <Button size="icon" variant="destructive">
+          <ThumbsDownIcon/>
+        </Button>
+      </span>
     </CardFooter>
    </Card> 
   ) 

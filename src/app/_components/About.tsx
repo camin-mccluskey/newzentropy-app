@@ -1,23 +1,25 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "~/components/ui/collapsible";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "~/components/ui/sheet";
+import { Button } from "~/components/ui/button";
 
 export function About() {
   return  (
-   <Card className="shadow-none min-w-60">
-      <Collapsible>
-        <CollapsibleTrigger className="w-full group">
-          <CardHeader className="flex flex-row space-y-0 items-center justify-between">
-            <CardTitle>About this project</CardTitle> 
-            <ChevronLeft className="size-4 group-data-[state=open]:-rotate-90 group-hover:-rotate-90 transition-transform duration-300" />
-          </CardHeader>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <CardContent>
-            <p>This is a projects that I made</p>
-          </CardContent>
-        </CollapsibleContent>
-      </Collapsible>
-   </Card> 
-  )
+  <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="outline">Learn more</Button>
+      </SheetTrigger>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Edit profile</SheetTitle>
+          <SheetDescription>
+            Make changes to your profile here. Click save when you're done.
+          </SheetDescription>
+        </SheetHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>)
 }

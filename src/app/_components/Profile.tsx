@@ -1,9 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Progress } from "~/components/ui/progress";
 
-export function Profile() {
+type ProfileProps = {
+  className?: string
+}
+
+export function Profile({ className }: ProfileProps) {
   return (
-   <Card>
+   <Card className={className}>
     <CardHeader>
       <CardTitle>Profile</CardTitle>
     </CardHeader> 
@@ -29,7 +33,7 @@ const ProfileAspect = ({ title, value }: ProfileAspectProps) => {
   return (
     <div className="space-y-1">
       <p className="text-sm font-medium">{title}</p>
-      <Progress value={value} className="w-24" />
+      <Progress value={value} className="w-full" />
     </div>
   )
 }
