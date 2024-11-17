@@ -6,34 +6,26 @@ import { type Story } from "../data/types";
 import Link from "next/link";
 import { Badge } from "~/components/ui/badge";
 import { useEffect, useRef } from "react";
-import { useLocalStorage } from "usehooks-ts";
+import { useStorage } from "~/lib/hooks/useStorage";
 
 type StoryProps = {
   story: Story
 }
 
 export function Story({ story }: StoryProps) {
-  const renderStart = useRef(Date.now());
-
-  useEffect(() => {
-    const startTime = renderStart.current;
-    return () => {
-      const timeRendered = Date.now() - startTime;
-      console.log(`Component was rendered for ${timeRendered} ms`);
-    };
-  }, []);
-
-  const onUpvote = () => {
-    console.log('upvote')
-  }
-
-  const onDownvote = () => {
-    console.log('downvote')
-  }
+  const { onViewStory, onClickStory, onUpvote, onDownvote } = useStorage()
+  // const renderStart = useRef(Date.now());
   
-  const onViewStory = () => {
-    console.log('view story')
-  }
+  useEffect(() => {
+    onViewStory()
+  }, [onViewStory])
+
+  // useEffect(() => {
+  //   const startTime = renderStart.current;
+  //   return () => {
+  //     const timeRendered = Date.now() - startTime;
+  //   };
+  // }, [onViewStory]);
 
   return (
    <Card>
@@ -45,9 +37,9 @@ export function Story({ story }: StoryProps) {
     </CardContent>
     <CardFooter className="flex gap-2 items-end justify-between">
       <div className="space-y-1">
-        <Link href={story.url} className="text-secondary-foreground hover:text-primary transition-colors flex items-center gap-1" target="_blank" onClick={onViewStory}>
-          View story
-              <ExternalLinkIcon className="size-4" />
+        <Link href={story.url} className="text-secondary-foreground hover:text-primary transition-colors flex items-center gap-1" target="_blank" onClick={onClickStory}>
+          Visit story
+        <ExternalLinkIcon className="size-4" />
         </Link>
         <span className="inline-flex items-center gap-1 flex-wrap">
           {story.tags.map((tag) => (
@@ -56,10 +48,10 @@ export function Story({ story }: StoryProps) {
         </span>
       </div>
       <span className="inline-flex gap-2">
-        <Button size="icon" variant="default" onClick={onUpvote}>
+        <Button size="icon" variant="default" onClick={() => onUpvote()}>
           <ThumbsUpIcon/>
         </Button>
-        <Button size="icon" variant="destructive" onClick={onDownvote}>
+        <Button size="icon" variant="destructive" onClick={() => onDownvote()}>
           <ThumbsDownIcon/>
         </Button>
       </span>

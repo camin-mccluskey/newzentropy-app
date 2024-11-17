@@ -1,28 +1,35 @@
+'use client'
+
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
 import { Progress } from "~/components/ui/progress";
+import { useStorage } from "~/lib/hooks/useStorage";
+import { cn } from "~/lib/utils";
 
 type ProfileProps = {
   className?: string
 }
 
 export function Profile({ className }: ProfileProps) {
+  const { state: { personality }, clearState } = useStorage()
+  const { openness, conscientiousness, extraversion, agreeableness, neuroticism } = personality.bigFive
+
   return (
-   <Card className={className}>
+   <Card className={cn('shadow-none', className)}>
     <CardHeader>
       <CardTitle>Profile</CardTitle>
     </CardHeader> 
       <CardContent>
         <ul className="space-y-4">
-          <ProfileAspect title="Openness" value={20} />
-          <ProfileAspect title="Conscientiousness" value={50} />
-          <ProfileAspect title="Extraversion" value={30} />
-          <ProfileAspect title="Agreeableness" value={50} />
-          <ProfileAspect title="Neuroticism" value={33} />
+          <ProfileAspect title="Openness" value={openness} />
+          <ProfileAspect title="Conscientiousness" value={conscientiousness} />
+          <ProfileAspect title="Extraversion" value={extraversion} />
+          <ProfileAspect title="Agreeableness" value={agreeableness} />
+          <ProfileAspect title="Neuroticism" value={neuroticism} />
         </ul>
       </CardContent>
       <CardFooter>
-        <Button variant="destructive" className="place-self-end" size="sm">Clear</Button>
+        <Button variant="destructive" className="place-self-end" size="sm" onClick={clearState}>Reset</Button>
       </CardFooter>
    </Card>
   )

@@ -1,11 +1,10 @@
 import { HydrateClient } from "~/trpc/server";
 import { Story } from "./_components/Story";
-import { PrevButton } from "./_components/PrevButton";
+// import { PrevButton } from "./_components/PrevButton";
 import { Settings } from "./_components/Settings";
 import { About } from "./_components/About";
 import { Profile } from "./_components/Profile";
 import { stories } from "./data/stories";
-import Link from "next/link";
 
 export default function Home({ searchParams }: { searchParams: { story?: string } }) {
   const storyIdx = searchParams.story ? parseInt(searchParams.story) : 0
@@ -20,7 +19,7 @@ export default function Home({ searchParams }: { searchParams: { story?: string 
             {currentStory && (
               <Story key={currentStory.uuid} story={currentStory} />
             )}
-            <PrevButton />
+            {/* <PrevButton /> */}
           </div>
           <Profile className="md:basis-1/5 w-full" />
         </section>

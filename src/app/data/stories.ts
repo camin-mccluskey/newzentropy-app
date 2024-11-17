@@ -12,6 +12,7 @@ export const stories: Story[] = [{
       "general",
       "politics"
   ],
+  "embedding": []
 },
 {
   "uuid": "2ea8c871-83aa-4e91-b178-a1c8db8a4908",
@@ -25,6 +26,7 @@ export const stories: Story[] = [{
       "entertainment",
       "general"
   ],
+  "embedding": []
 },
 {
   "uuid": "ba536cc4-423d-461c-948b-39f378219b1d",
@@ -37,7 +39,8 @@ export const stories: Story[] = [{
   "tags": [
       "entertainment",
       "general"
-  ]
+  ],
+  "embedding": []
 },
 {
   "uuid": "36e8e042-d85d-4fa3-8cc0-64ba8b85adfd",
@@ -50,7 +53,8 @@ export const stories: Story[] = [{
   "tags": [
       "general",
       "business"
-  ]
+  ],
+  "embedding": []
 },
 {
   "uuid": "12eec284-2f2d-410e-ba43-f58faaf8f23a",
@@ -63,6 +67,7 @@ export const stories: Story[] = [{
   "tags": [
       "general",
       "business"
-  ]
+  ],
+  "embedding": []
 },
 ]

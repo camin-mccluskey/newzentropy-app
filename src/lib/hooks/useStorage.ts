@@ -1,10 +1,18 @@
+import { useCallback } from "react"
 import { useLocalStorage } from "usehooks-ts"
+import { stories } from "~/app/data/stories"
+import { parseAsInteger, useQueryState } from "nuqs"
 
 const KEY = 'mena-storage'
 
-type Mode = 'placate' | 'surprise' | 'challenge'
+export enum Mode {
+  PLACATE = 'placate',
+  SURPRISE = 'surprise',
+  CHALLENGE = 'challenge',
+}
 type StoryStats = {
   storyId: string
+  storyIdx: number
   viewTime: number
   rating: number
   clicked: boolean
@@ -12,7 +20,6 @@ type StoryStats = {
 
 type State = {
   activity: {
-    currentStory: StoryStats
     history: StoryStats[]
     lastVisited: number
   },
@@ -33,8 +40,9 @@ type State = {
 
 const initialState: State = {
   activity: {
-    currentStory: { storyId: '', viewTime: 0, rating: 0, clicked: false },
-    history: [],
+    history: [
+      { storyId: stories[0]?.uuid ?? '', storyIdx: 0, viewTime: 0, rating: 0, clicked: false },
+    ],
     lastVisited: Date.now()
   },
   personality: {
@@ -48,16 +56,62 @@ const initialState: State = {
     }
   },
   settings: {
-    mode: 'challenge'
+    mode: Mode.CHALLENGE
   }
 }
 
 export function useStorage()  {
+  const [storyIdx, setStoryIdx] = useQueryState(
+    'story',
+    parseAsInteger.withDefault(0)
+  ) 
+  const safeStoryIdx = Math.max(0, Math.min(storyIdx, stories.length - 1))
   const [value, setValue, removeValue] = useLocalStorage<State>(KEY, initialState)
+  
+  const onChangeMode = useCallback((mode: Mode) => {
+    setValue((value) => ({ ...value, settings: { ...value.settings, mode } }))
+  }, [setValue])
+  
+  // const onPrevStory = () => {
+  //   setValue((value) => ({ ...value, activity: { ...value.activity, currentStoryIdx: Math.max(0, value.activity.currentStoryIdx - 1), lastVisited: Date.now() } }))
+  // }
+  
+  const onVote = useCallback(async (type: 'up' | 'down') => {
+    setValue((value) => {
+      const { history } = value.activity
+      const [oldHistory, currentStory] = [history.slice(0, -1), history[history.length - 1]]
+      if (!currentStory) return value
+      return { ...value, activity: { history: [...oldHistory, { ...currentStory, rating: type === 'up' ? 1 : -1}], lastVisited: Date.now() } }
+    })
+    await setStoryIdx(value.activity.history.length)
+  }, [setValue, setStoryIdx, value.activity.history.length])
+  
+  const onUpvote = useCallback(() => onVote('up'), [onVote])
+  const onDownvote = useCallback(() => onVote('down'), [onVote])
+  
+  const onClickStory = useCallback(() => {
+    setValue((value) => {
+      const { history } = value.activity
+      const [oldHistory, currentStory] = [history.slice(0, -1), history[history.length - 1]]
+      if (!currentStory) return value
+      return { ...value, activity: { history: [...oldHistory, { ...currentStory, clicked: true }], lastVisited: Date.now() } }
+    })
+  }, [setValue])
+  
+  const onViewStory = useCallback(() =>  {
+    // push new story to history
+    const newStory = { storyId: stories[safeStoryIdx]?.uuid ?? '', storyIdx: safeStoryIdx + 1, viewTime: 0, rating: 0, clicked: false }
+    setValue((value) => ({ ...value, activity: { ...value.activity, history: [...value.activity.history, newStory], lastVisited: Date.now() } }))
+  }, [setValue, safeStoryIdx])
   
   return {
     state: value,
     setState: setValue,
-    clearState: removeValue
+    clearState: removeValue,
+    onChangeMode,
+    onClickStory,
+    onViewStory,
+    onUpvote,
+    onDownvote,
   }
 }
