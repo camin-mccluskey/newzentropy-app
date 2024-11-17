@@ -1,4 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Button } from "~/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
 import { Progress } from "~/components/ui/progress";
 
 type ProfileProps = {
@@ -20,6 +21,9 @@ export function Profile({ className }: ProfileProps) {
           <ProfileAspect title="Neuroticism" value={33} />
         </ul>
       </CardContent>
+      <CardFooter>
+        <Button variant="destructive" className="place-self-end" size="sm">Clear</Button>
+      </CardFooter>
    </Card>
   )
 }

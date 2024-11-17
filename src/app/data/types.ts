@@ -7,4 +7,5 @@ export type Story = {
   tags: string[];
   source: string;
   publishedAt: string
+  embedding: number[]
 }
