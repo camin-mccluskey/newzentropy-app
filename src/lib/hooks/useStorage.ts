@@ -1,7 +1,9 @@
 import { useCallback } from "react"
 import { useLocalStorage } from "usehooks-ts"
 import { stories } from "~/app/data/stories"
-import { parseAsInteger, useQueryState } from "nuqs"
+import { useQueryState } from "nuqs"
+import { parseAsInteger } from "nuqs/server"
+import { createSearchParamsCache } from "nuqs/server"
 
 const KEY = 'mena-storage'
 
@@ -60,11 +62,12 @@ const initialState: State = {
   }
 }
 
+export const searchParamsCache = createSearchParamsCache({
+  story: parseAsInteger.withDefault(0)
+})
+
 export function useStorage()  {
-  const [storyIdx, setStoryIdx] = useQueryState(
-    'story',
-    parseAsInteger.withDefault(0)
-  ) 
+  const [storyIdx, setStoryIdx] = useQueryState('story', parseAsInteger.withDefault(0)) 
   const safeStoryIdx = Math.max(0, Math.min(storyIdx, stories.length - 1))
   const [value, setValue, removeValue] = useLocalStorage<State>(KEY, initialState)
   
@@ -99,10 +102,12 @@ export function useStorage()  {
   }, [setValue])
   
   const onViewStory = useCallback(() =>  {
-    // push new story to history
-    const newStory = { storyId: stories[safeStoryIdx]?.uuid ?? '', storyIdx: safeStoryIdx + 1, viewTime: 0, rating: 0, clicked: false }
-    setValue((value) => ({ ...value, activity: { ...value.activity, history: [...value.activity.history, newStory], lastVisited: Date.now() } }))
-  }, [setValue, safeStoryIdx])
+    // push new story to history if not present
+    const newStory = { storyId: stories[safeStoryIdx]?.uuid ?? '', storyIdx: safeStoryIdx, viewTime: 0, rating: 0, clicked: false }
+    if (!value.activity.history.find((story) => story.storyId === newStory.storyId)) {
+      setValue((value) => ({ ...value, activity: { ...value.activity, history: [...value.activity.history, newStory], lastVisited: Date.now() } }))
+    }
+  }, [safeStoryIdx, value.activity.history, setValue])
   
   return {
     state: value,

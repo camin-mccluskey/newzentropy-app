@@ -5,9 +5,15 @@ import { Settings } from "./_components/Settings";
 import { About } from "./_components/About";
 import { Profile } from "./_components/Profile";
 import { stories } from "./data/stories";
+import { type SearchParams } from "nuqs/server";
+import { searchParamsCache } from "~/lib/hooks/useStorage";
 
-export default function Home({ searchParams }: { searchParams: { story?: string } }) {
-  const storyIdx = searchParams.story ? parseInt(searchParams.story) : 0
+type PageProps = {
+  searchParams: Promise<SearchParams> // Next.js 15+: async searchParams prop
+}
+
+export default async function Home({ searchParams }: PageProps) {
+  const { story: storyIdx } = await searchParamsCache.parse(searchParams)
   const currentStory = stories[storyIdx]
 
   return (
