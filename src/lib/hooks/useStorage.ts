@@ -1,11 +1,8 @@
-import { useCallback } from "react"
-import { useLocalStorage } from "usehooks-ts"
-import { stories } from "~/app/data/stories"
-import { useQueryState } from "nuqs"
-import { parseAsInteger } from "nuqs/server"
-import { createSearchParamsCache } from "nuqs/server"
+import { useCallback } from 'react'
+import { useLocalStorage } from 'usehooks-ts'
+import { type Story } from '~/app/data/types'
 
-const KEY = 'mena-storage'
+const KEY = 'newzentropy-storage'
 
 export enum Mode {
   PLACATE = 'placate',
@@ -14,7 +11,6 @@ export enum Mode {
 }
 type StoryStats = {
   storyId: string
-  storyIdx: number
   viewTime: number
   rating: number
   clicked: boolean
@@ -24,7 +20,7 @@ type State = {
   activity: {
     history: StoryStats[]
     lastVisited: number
-  },
+  }
   personality: {
     embedding: number[]
     bigFive: {
@@ -42,80 +38,124 @@ type State = {
 
 const initialState: State = {
   activity: {
-    history: [
-      { storyId: stories[0]?.uuid ?? '', storyIdx: 0, viewTime: 0, rating: 0, clicked: false },
-    ],
-    lastVisited: Date.now()
+    history: [],
+    lastVisited: Date.now(),
   },
   personality: {
-    embedding: [],
+    embedding: Array.from({ length: 384 }, () => Math.random()),
     bigFive: {
       openness: 50,
       conscientiousness: 50,
       extraversion: 50,
       agreeableness: 50,
       neuroticism: 50,
-    }
+    },
   },
   settings: {
-    mode: Mode.CHALLENGE
-  }
+    mode: Mode.CHALLENGE,
+  },
 }
 
-export const searchParamsCache = createSearchParamsCache({
-  story: parseAsInteger.withDefault(0)
-})
+// UPDATE CONSTANTS
+const ALPHA = 0.1
+const VOTE_WEIGHT = -0.5
+const CLICK_WEIGHT = 1
+const PER_SECOND_VIEWED_WEIGHT = 0.05
 
-export function useStorage()  {
-  const [storyIdx, setStoryIdx] = useQueryState('story', parseAsInteger.withDefault(0)) 
-  const safeStoryIdx = Math.max(0, Math.min(storyIdx, stories.length - 1))
-  const [value, setValue, removeValue] = useLocalStorage<State>(KEY, initialState)
-  
-  const onChangeMode = useCallback((mode: Mode) => {
-    setValue((value) => ({ ...value, settings: { ...value.settings, mode } }))
-  }, [setValue])
-  
+export function useStorage() {
+  const [state, setState, removeValue] = useLocalStorage<State>(KEY, initialState)
+
+  const onChangeMode = useCallback(
+    (mode: Mode) => {
+      setState((value) => ({ ...value, settings: { ...value.settings, mode } }))
+    },
+    [setState],
+  )
+
+  const _updateUserEmbedding = useCallback(
+    (storyEmbedding: number[], storyStats: StoryStats) => {
+      // score the stat
+      const { rating, clicked, viewTime } = storyStats
+      const score =
+        rating * VOTE_WEIGHT +
+        (clicked ? CLICK_WEIGHT : 0) +
+        Math.max(10, viewTime / 1000) * PER_SECOND_VIEWED_WEIGHT
+
+      // get the user embedding
+      const userEmbedding = state.personality.embedding
+
+      // calculate the new user embedding
+      const direction = storyEmbedding.map((storyDim, i) => storyDim - (userEmbedding[i] ?? 0))
+      const diff = direction.map((d) => d * score * ALPHA)
+      const newUserEmbedding = userEmbedding.map((d, i) => d + (diff[i] ?? 0))
+      setState((value) => ({
+        ...value,
+        personality: { ...value.personality, embedding: newUserEmbedding },
+      }))
+    },
+    [setState, state.personality.embedding],
+  )
+
   // const onPrevStory = () => {
   //   setValue((value) => ({ ...value, activity: { ...value.activity, currentStoryIdx: Math.max(0, value.activity.currentStoryIdx - 1), lastVisited: Date.now() } }))
   // }
-  
-  const onVote = useCallback(async (type: 'up' | 'down') => {
-    setValue((value) => {
-      const { history } = value.activity
-      const [oldHistory, currentStory] = [history.slice(0, -1), history[history.length - 1]]
-      if (!currentStory) return value
-      return { ...value, activity: { history: [...oldHistory, { ...currentStory, rating: type === 'up' ? 1 : -1}], lastVisited: Date.now() } }
-    })
-    await setStoryIdx(value.activity.history.length)
-  }, [setValue, setStoryIdx, value.activity.history.length])
-  
-  const onUpvote = useCallback(() => onVote('up'), [onVote])
-  const onDownvote = useCallback(() => onVote('down'), [onVote])
-  
-  const onClickStory = useCallback(() => {
-    setValue((value) => {
-      const { history } = value.activity
-      const [oldHistory, currentStory] = [history.slice(0, -1), history[history.length - 1]]
-      if (!currentStory) return value
-      return { ...value, activity: { history: [...oldHistory, { ...currentStory, clicked: true }], lastVisited: Date.now() } }
-    })
-  }, [setValue])
-  
-  const onViewStory = useCallback(() =>  {
-    // push new story to history if not present
-    const newStory = { storyId: stories[safeStoryIdx]?.uuid ?? '', storyIdx: safeStoryIdx, viewTime: 0, rating: 0, clicked: false }
-    if (!value.activity.history.find((story) => story.storyId === newStory.storyId)) {
-      setValue((value) => ({ ...value, activity: { ...value.activity, history: [...value.activity.history, newStory], lastVisited: Date.now() } }))
-    }
-  }, [safeStoryIdx, value.activity.history, setValue])
-  
+
+  const onVote = useCallback(
+    async (type: 'up' | 'down', story: Story, viewTime: number) => {
+      const storyStat = {
+        storyId: story.uuid,
+        rating: type === 'up' ? 1 : -1,
+        clicked: false,
+        viewTime,
+      }
+      setState((value) => {
+        const { history } = value.activity
+        return {
+          ...value,
+          activity: {
+            history: [...history, storyStat],
+            lastVisited: Date.now(),
+          },
+        }
+      })
+      _updateUserEmbedding(story.embedding, storyStat)
+    },
+    [setState, _updateUserEmbedding],
+  )
+
+  const onUpvote = useCallback(
+    (story: Story, viewTime: number) => onVote('up', story, viewTime),
+    [onVote],
+  )
+  const onDownvote = useCallback(
+    (story: Story, viewTime: number) => onVote('down', story, viewTime),
+    [onVote],
+  )
+
+  const onVisitStory = useCallback(
+    (story: Story, viewTime: number) => {
+      const storyStat = { storyId: story.uuid, rating: 0, clicked: true, viewTime }
+      setState((value) => {
+        const { history } = value.activity
+        return {
+          ...value,
+          activity: {
+            history: [...history, storyStat],
+            lastVisited: Date.now(),
+          },
+        }
+      })
+      _updateUserEmbedding(story.embedding, storyStat)
+    },
+    [setState, _updateUserEmbedding],
+  )
+
   return {
-    state: value,
-    setState: setValue,
+    state: state,
+    setState: setState,
     clearState: removeValue,
     onChangeMode,
-    onClickStory,
-    onViewStory,
+    onVisitStory,
     onUpvote,
     onDownvote,
   }

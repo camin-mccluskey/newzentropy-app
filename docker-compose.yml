@@ -16,7 +16,7 @@ services:
     environment:
       PORT: 5082
       INDEX_TYPE: serverless
-      DIMENSION: 2
+      DIMENSION: 384
       METRIC: euclidean
     ports:
       - '5082:5082'

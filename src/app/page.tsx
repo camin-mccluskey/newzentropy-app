@@ -1,39 +1,28 @@
-import { HydrateClient } from "~/trpc/server";
-import { Story } from "./_components/Story";
-// import { PrevButton } from "./_components/PrevButton";
-import { Settings } from "./_components/Settings";
-import { About } from "./_components/About";
-import { Profile } from "./_components/Profile";
-import { stories } from "./data/stories";
-import { type SearchParams } from "nuqs/server";
-import { searchParamsCache } from "~/lib/hooks/useStorage";
+import { HydrateClient } from '~/trpc/server'
+import { Settings } from './_components/Settings'
+import { About } from './_components/About'
+import { Profile } from './_components/Profile'
+import { Stories } from './_components/Stories'
 
-type PageProps = {
-  searchParams: Promise<SearchParams> // Next.js 15+: async searchParams prop
-}
-
-export default async function Home({ searchParams }: PageProps) {
-  const { story: storyIdx } = await searchParamsCache.parse(searchParams)
-  const currentStory = stories[storyIdx]
-
+export default async function Home() {
   return (
     <HydrateClient>
-      <main className="flex min-h-screen max-w-screen-2xl gap-5 items-stretch justify-between mx-auto flex-col md:p-10 p-5">
-        <section className="flex justify-between flex-wrap gap-5">
-          <h1 className="text-3xl font-bold text-center bg-gradient-to-r from-amber-500 to-fuchsia-500 bg-clip-text text-transparent">Newzentropy</h1>
+      <main className="mx-auto flex min-h-screen max-w-screen-2xl flex-col items-stretch justify-between gap-5 p-5 md:p-10">
+        <section className="flex flex-wrap justify-between gap-5">
+          <h1 className="bg-gradient-to-r from-amber-500 to-fuchsia-500 bg-clip-text text-center text-3xl font-bold text-transparent">
+            Newzentropy
+          </h1>
           <div className="flex flex-col items-stretch gap-4 md:basis-2/5">
-            {currentStory && (
-              <Story key={currentStory.uuid} story={currentStory} />
-            )}
+            <Stories />
             {/* <PrevButton /> */}
           </div>
-          <Profile className="md:basis-1/5 w-full" />
+          <Profile className="w-full md:basis-1/5" />
         </section>
-        <section className="flex justify-between items-end gap-5 flex-col md:flex-row-reverse">
+        <section className="flex flex-col items-end justify-between gap-5 md:flex-row-reverse">
           <Settings />
           <About />
         </section>
       </main>
     </HydrateClient>
-  );
+  )
 }
