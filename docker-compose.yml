@@ -2,7 +2,7 @@ version: '3.9'
 services:
   stories:
     image: ghcr.io/pinecone-io/pinecone-index:latest
-    platform: linux/amd64
+    platform: linux/amd64/v8
     environment:
       PORT: 5081
       INDEX_TYPE: serverless
@@ -12,7 +12,7 @@ services:
       - '5081:5081'
   stories-inverse:
     image: ghcr.io/pinecone-io/pinecone-index:latest
-    platform: linux/amd64
+    platform: linux/amd64/v8
     environment:
       PORT: 5082
       INDEX_TYPE: serverless
