@@ -11,6 +11,7 @@ export enum Mode {
 }
 type StoryStats = {
   storyId: string
+  tags: string[]
   viewTime: number
   rating: number
   clicked: boolean
@@ -57,7 +58,7 @@ const initialState: State = {
 }
 
 // UPDATE CONSTANTS
-const ALPHA = 0.1
+const ALPHA = 0.25
 const VOTE_WEIGHT = -0.5
 const CLICK_WEIGHT = 1
 const PER_SECOND_VIEWED_WEIGHT = 0.05
@@ -104,6 +105,7 @@ export function useStorage() {
     async (type: 'up' | 'down', story: Story, viewTime: number) => {
       const storyStat = {
         storyId: story.uuid,
+        tags: story.tags,
         rating: type === 'up' ? 1 : -1,
         clicked: false,
         viewTime,
@@ -134,7 +136,13 @@ export function useStorage() {
 
   const onVisitStory = useCallback(
     (story: Story, viewTime: number) => {
-      const storyStat = { storyId: story.uuid, rating: 0, clicked: true, viewTime }
+      const storyStat = {
+        storyId: story.uuid,
+        tags: story.tags,
+        rating: 0,
+        clicked: true,
+        viewTime,
+      }
       setState((value) => {
         const { history } = value.activity
         return {

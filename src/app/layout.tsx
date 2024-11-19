@@ -1,19 +1,17 @@
-import "~/styles/globals.css";
+import '~/styles/globals.css'
 
-import { GeistSans } from "geist/font/sans";
-import { type Metadata } from "next";
+import { GeistSans } from 'geist/font/sans'
+import { type Metadata } from 'next'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
-import { TRPCReactProvider } from "~/trpc/react";
+import { TRPCReactProvider } from '~/trpc/react'
 
 export const metadata: Metadata = {
-  title: "Maximum Entropy News",
-  description: "A news aggregator that uses maximum entropy to rank articles. Created by Camin McCluskey.",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
-};
+  title: 'Newzentropy',
+  description: 'A best worst news aggregator that',
+  icons: [{ rel: 'icon', url: '/favicon.ico' }],
+}
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${GeistSans.variable}`}>
       <body>
@@ -22,5 +20,5 @@ export default function RootLayout({
         </NuqsAdapter>
       </body>
     </html>
-  );
+  )
 }

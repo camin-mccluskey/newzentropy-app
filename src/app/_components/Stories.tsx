@@ -2,7 +2,6 @@
 
 import { useStorage } from '~/lib/hooks/useStorage'
 import { api } from '~/trpc/react'
-import { type Story as StoryT } from '../data/types'
 import { Story } from './Story'
 
 export function Stories() {
@@ -17,6 +16,7 @@ export function Stories() {
     embedding,
     history: history.map((s) => s.storyId),
     mode,
+    lastTopics: history[history.length - 1]?.tags ?? [],
   })
 
   if (isLoading) {

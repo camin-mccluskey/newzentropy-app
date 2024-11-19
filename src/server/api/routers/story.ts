@@ -11,6 +11,7 @@ export const storyRouter = createTRPCRouter({
         embedding: z.array(z.number()),
         history: z.array(z.string()),
         mode: z.nativeEnum(Mode),
+        lastTopics: z.array(z.string()),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -19,7 +20,7 @@ export const storyRouter = createTRPCRouter({
         stories = await ctx.vectorDb.getSimilarStories(input.embedding).then((res) => res.matches)
       } else if (input.mode === Mode.SURPRISE) {
         stories = await ctx.vectorDb
-          .getSemiSimilarStories(input.embedding)
+          .getSemiSimilarStories(input.embedding, input.lastTopics)
           .then((res) => res.matches)
       } else {
         stories = await ctx.vectorDb

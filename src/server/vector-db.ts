@@ -18,17 +18,20 @@ export const vectorDb = {
   getDissimilarStories: async (embedding: number[]) => {
     return await inverseStoriesIndex.query({
       vector: embedding,
-      topK: 3,
+      topK: 5,
       includeValues: true,
       includeMetadata: true,
     })
   },
-  getSemiSimilarStories: async (embedding: number[]) => {
-    return await storiesIndex.query({
+  getSemiSimilarStories: async (embedding: number[], lastTopics: string[]) => {
+    return await inverseStoriesIndex.query({
       vector: embedding,
-      topK: 10,
+      topK: 5,
       includeValues: true,
       includeMetadata: true,
+      filter: {
+        tags: { $in: lastTopics },
+      },
     })
   },
 }
