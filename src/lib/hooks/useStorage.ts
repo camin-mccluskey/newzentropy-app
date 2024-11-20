@@ -64,7 +64,9 @@ const CLICK_WEIGHT = 1
 const PER_SECOND_VIEWED_WEIGHT = 0.05
 
 export function useStorage() {
-  const [state, setState, removeValue] = useLocalStorage<State>(KEY, initialState)
+  const [state, setState, removeValue] = useLocalStorage<State>(KEY, initialState, {
+    initializeWithValue: false,
+  })
 
   const onChangeMode = useCallback(
     (mode: Mode) => {
