@@ -15,30 +15,29 @@ export const storyRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      const { mode } = input
       const embedding = decompressVector(input.compressedEmbedding)
-      let stories: ScoredPineconeRecord<RecordMetadata>[]
-      if (input.mode === Mode.PLACATE) {
-        stories = await ctx.vectorDb.getSimilarStories(embedding).then((res) => res.matches)
-      } else if (input.mode === Mode.SURPRISE) {
-        stories = await ctx.vectorDb
-          .getSemiSimilarStories(embedding, input.lastTopics)
-          .then((res) => res.matches)
-      } else {
-        stories = await ctx.vectorDb.getDissimilarStories(embedding).then((res) => res.matches)
+      // let stories: ScoredPineconeRecord<RecordMetadata>[]
+      switch (mode) {
+        case Mode.PLACATE:
+          return await ctx.vectorDb.getSimilarStory(embedding, input.history)
+        case Mode.SURPRISE:
+          return await ctx.vectorDb.getSemiSimilarStory(embedding, input.lastTopics, input.history)
+        case Mode.CHALLENGE:
+          return await ctx.vectorDb.getDissimilarStory(embedding, input.history)
+        default:
+          return mode satisfies never
       }
-      const selectedStory = stories.filter((story) => !input.history.includes(story.id))[0]
-      if (!selectedStory) {
-        return null
-      }
-      return {
-        uuid: selectedStory.id,
-        embedding: selectedStory.values,
-        ...selectedStory.metadata,
-      } as Story
+
+      // return {
+      //   uuid: selectedStory.id,
+      //   embedding: selectedStory.values,
+      //   ...selectedStory.metadata,
+      // } as Story
     }),
 })
 
-// Server-side decoding
+// Server-side embedding decoding
 const decompressVector = (compressed: string) => {
   // Decode and convert back to array
   const vectorString = decodeURIComponent(atob(compressed))
