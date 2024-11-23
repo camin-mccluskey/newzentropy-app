@@ -99,10 +99,6 @@ export function useStorage() {
     [setState, state.personality.embedding],
   )
 
-  // const onPrevStory = () => {
-  //   setValue((value) => ({ ...value, activity: { ...value.activity, currentStoryIdx: Math.max(0, value.activity.currentStoryIdx - 1), lastVisited: Date.now() } }))
-  // }
-
   const onVote = useCallback(
     async (type: 'up' | 'down', story: Story, viewTime: number) => {
       const storyStat = {

@@ -1,9 +1,9 @@
 import { Pinecone } from '@pinecone-database/pinecone'
+import { storySchema } from '~/app/data/types'
 import { env } from '~/env'
 
 const pc = new Pinecone({ apiKey: env.PINECONE_API_KEY })
 const storiesIndex = pc.index('stories', env.STORIES_INDEX_HOST)
-const inverseStoriesIndex = pc.index('inverse-stories', env.INVERSE_STORIES_INDEX_HOST)
 
 const excludedStoryFilter = (excludedStoryIds: string[]) => {
   return {
@@ -13,8 +13,7 @@ const excludedStoryFilter = (excludedStoryIds: string[]) => {
 
 export const vectorDb = {
   getSimilarStory: async (embedding: number[], excludedStoryIds: string[]) => {
-    // TODO: validate w/ zod
-    return await storiesIndex
+    const res = await storiesIndex
       .query({
         vector: embedding,
         topK: 1,
@@ -23,28 +22,29 @@ export const vectorDb = {
         filter: excludedStoryFilter(excludedStoryIds),
       })
       .then((res) => res.matches[0])
+    const { metadata, values } = res ?? {}
+    return storySchema.parse({ ...metadata, embedding: values })
   },
   getDissimilarStory: async (embedding: number[], excludedStoryIds: string[]) => {
     const mostSimilarStory = await vectorDb.getSimilarStory(embedding, excludedStoryIds)
-    if (!mostSimilarStory) {
-      return
-    }
-    // get least similar story from lookup
-    // TODO: shold invert this naming convention
-    const leastSimilarStoryId = (
-      mostSimilarStory.metadata?.similar_articles as Array<{ uuid: string }>
-    )?.[0].uuid as string | undefined
+    const leastSimilarStoryId = mostSimilarStory.least_similar_articles.find(
+      ({ uuid }) => !excludedStoryIds.includes(uuid),
+    )?.uuid
     if (!leastSimilarStoryId) {
-      return
+      throw new Error('No dissimilar story found')
     }
-    return await storiesIndex.fetch([leastSimilarStoryId])
+    const res = await storiesIndex
+      .fetch([leastSimilarStoryId])
+      .then((res) => res.records[leastSimilarStoryId])
+    const { metadata, values } = res ?? {}
+    return storySchema.parse({ ...metadata, embedding: values })
   },
   getSemiSimilarStory: async (
     embedding: number[],
     lastTopics: string[],
     excludedStoryIds: string[],
   ) => {
-    const similarStory = await storiesIndex
+    const mostSimilarStory = await storiesIndex
       .query({
         vector: embedding,
         topK: 1,
@@ -56,10 +56,19 @@ export const vectorDb = {
         },
       })
       .then((res) => res.matches[0])
-    if (!similarStory) {
-      return
+    const { metadata, values } = mostSimilarStory ?? {}
+    const similarInTopic = storySchema.parse({ ...metadata, embedding: values })
+
+    const leastSimilarStoryId = similarInTopic.least_similar_articles.find(
+      ({ uuid }) => !excludedStoryIds.includes(uuid),
+    )?.uuid
+    if (!leastSimilarStoryId) {
+      throw new Error('No dissimilar story found')
     }
-    // TODO: same as before - invert, except take from end of array of disimilar stories
-    return similarStory
+    const res = await storiesIndex
+      .fetch([leastSimilarStoryId])
+      .then((res) => res.records[leastSimilarStoryId])
+    const { metadata: finalMetadata, values: finalValues } = res ?? {}
+    return storySchema.parse({ ...finalMetadata, embedding: finalValues })
   },
 }

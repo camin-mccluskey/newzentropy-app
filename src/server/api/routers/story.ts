@@ -1,6 +1,4 @@
-import { type RecordMetadata, type ScoredPineconeRecord } from '@pinecone-database/pinecone'
 import { z } from 'zod'
-import { type Story } from '~/app/data/types'
 import { Mode } from '~/lib/hooks/useStorage'
 import { createTRPCRouter, publicProcedure } from '~/server/api/trpc'
 
@@ -28,12 +26,6 @@ export const storyRouter = createTRPCRouter({
         default:
           return mode satisfies never
       }
-
-      // return {
-      //   uuid: selectedStory.id,
-      //   embedding: selectedStory.values,
-      //   ...selectedStory.metadata,
-      // } as Story
     }),
 })
 
