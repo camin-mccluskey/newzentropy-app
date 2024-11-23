@@ -102,7 +102,7 @@ export function useStorage() {
   const onVote = useCallback(
     async (type: 'up' | 'down', story: Story, viewTime: number) => {
       const storyStat = {
-        storyId: story.uuid,
+        storyId: story.id,
         tags: story.tags,
         rating: type === 'up' ? 1 : -1,
         clicked: false,
@@ -135,7 +135,7 @@ export function useStorage() {
   const onVisitStory = useCallback(
     (story: Story, viewTime: number) => {
       const storyStat = {
-        storyId: story.uuid,
+        storyId: story.id,
         tags: story.tags,
         rating: 0,
         clicked: true,

@@ -17,7 +17,6 @@ export const env = createEnv({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     PINECONE_API_KEY: z.string().min(1),
     STORIES_INDEX_HOST: z.string().min(1),
-    INVERSE_STORIES_INDEX_HOST: z.string().min(1),
   },
 
   /**
@@ -38,7 +37,6 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     PINECONE_API_KEY: process.env.PINECONE_API_KEY,
     STORIES_INDEX_HOST: process.env.STORIES_INDEX_HOST,
-    INVERSE_STORIES_INDEX_HOST: process.env.INVERSE_STORIES_INDEX_HOST,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
