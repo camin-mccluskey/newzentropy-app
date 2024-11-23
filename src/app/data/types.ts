@@ -10,12 +10,7 @@ export const storySchema = z.object({
   source: z.string().min(1),
   publishedAt: z.string().datetime(),
   embedding: z.array(z.number()),
-  leastSimilarStories: z.array(
-    z.object({
-      id: z.string().min(1),
-      similarity: z.number(),
-    }),
-  ),
+  leastSimilarStoryIds: z.array(z.string().min(1)),
 })
 
 export type Story = z.infer<typeof storySchema>

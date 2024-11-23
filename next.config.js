@@ -18,7 +18,6 @@ const config = {
     // ],
   },
   eslint: {
-    // TODO: remove this when json-types-generator can generator non-any types
     ignoreDuringBuilds: true,
   },
 }

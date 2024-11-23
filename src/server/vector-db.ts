@@ -27,9 +27,9 @@ export const vectorDb = {
   },
   getDissimilarStory: async (embedding: number[], excludedStoryIds: string[]) => {
     const mostSimilarStory = await vectorDb.getSimilarStory(embedding, excludedStoryIds)
-    const leastSimilarStoryId = mostSimilarStory.leastSimilarStories.find(
-      ({ id }) => !excludedStoryIds.includes(id),
-    )?.id
+    const leastSimilarStoryId = mostSimilarStory.leastSimilarStoryIds.find(
+      (id) => !excludedStoryIds.includes(id),
+    )
     if (!leastSimilarStoryId) {
       throw new Error('No dissimilar story found')
     }
@@ -59,9 +59,9 @@ export const vectorDb = {
     const { metadata, values } = mostSimilarStory ?? {}
     const similarInTopic = storySchema.parse({ ...metadata, embedding: values })
 
-    const leastSimilarStoryId = similarInTopic.leastSimilarStories.find(
-      ({ id }) => !excludedStoryIds.includes(id),
-    )?.id
+    const leastSimilarStoryId = similarInTopic.leastSimilarStoryIds.find(
+      (id) => !excludedStoryIds.includes(id),
+    )
     if (!leastSimilarStoryId) {
       throw new Error('No dissimilar story found')
     }
