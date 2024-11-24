@@ -35,6 +35,7 @@ export function About() {
               <Link
                 className="text-blue-500 underline"
                 href="https://www.producthunt.com/products/stackfix"
+                target="_blank"
               >
                 here
               </Link>
@@ -44,6 +45,7 @@ export function About() {
         </div>
         <Link
           href="https://buymeacoffee.com/camin"
+          target="_blank"
           className={buttonVariants({ className: 'self-end' })}
         >
           ☕️ Buy me a coffee
