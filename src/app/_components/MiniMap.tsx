@@ -1,184 +1,176 @@
+'use client'
+
 import React, { useEffect, useRef } from 'react'
 import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer'
-
-interface Vector {
-  dimensions: number[]
-}
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import { PCA } from '~/lib/pca'
 
 interface MiniMapProps {
-  vector1: Vector
-  vector2: Vector
+  userVector: number[]
+  storyVector: number[]
 }
 
-const performPCA = (vectors: number[][]): number[][] => {
-  const mean = vectors[0]?.map(
-    (_, colIndex) => vectors.reduce((sum, row) => sum + (row[colIndex] ?? 0), 0) / vectors.length,
-  )
-
-  const centeredData = vectors.map((vector) => vector.map((value, index) => value - mean[index]))
-
-  // Simplified PCA - in production use a proper linear algebra library
-  const reducedData = centeredData.map((vector) => [
-    vector.slice(0, 3).reduce((sum, val) => sum + val, 0),
-    vector.slice(3, 6).reduce((sum, val) => sum + val, 0),
-    vector.slice(6, 9).reduce((sum, val) => sum + val, 0),
-  ])
-
-  return reducedData
-}
-
-const MiniMap: React.FC<MiniMapProps> = ({ vector1, vector2 }) => {
-  const containerRef = useRef<HTMLDivElement>(null)
+const MiniMap: React.FC<MiniMapProps> = ({ userVector, storyVector }) => {
+  const containerRef = useRef<HTMLDivElement | null>(null)
   const sceneRef = useRef<THREE.Scene | null>(null)
-  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
-  const labelRendererRef = useRef<CSS2DRenderer | null>(null)
   const controlsRef = useRef<OrbitControls | null>(null)
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
 
   useEffect(() => {
-    if (!containerRef.current) return
+    const container = containerRef.current
+    if (!container) return
 
-    // Initialize scene
+    // Setup scene
     const scene = new THREE.Scene()
     scene.background = new THREE.Color(0xf0f0f0)
     sceneRef.current = scene
 
-    // Set up camera
+    // Setup camera
     const camera = new THREE.PerspectiveCamera(
       75,
-      containerRef.current.clientWidth / containerRef.current.clientHeight,
+      container.clientWidth / container.clientHeight,
       0.1,
       1000,
     )
-    camera.position.set(3, 3, 5)
-    cameraRef.current = camera
+    camera.position.set(2, 2, 4)
 
-    // Set up WebGL renderer
+    // Setup renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true })
-    renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight)
-    containerRef.current.appendChild(renderer.domElement)
+    renderer.setSize(container.clientWidth, container.clientHeight)
+    container.appendChild(renderer.domElement)
     rendererRef.current = renderer
 
-    // Set up CSS2D renderer for labels
-    const labelRenderer = new CSS2DRenderer()
-    labelRenderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight)
-    labelRenderer.domElement.style.position = 'absolute'
-    labelRenderer.domElement.style.top = '0'
-    labelRenderer.domElement.style.pointerEvents = 'none'
-    containerRef.current.appendChild(labelRenderer.domElement)
-    labelRendererRef.current = labelRenderer
-
-    // Add orbit controls
+    // Add controls
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.enableDamping = true
-    controls.dampingFactor = 0.05
     controlsRef.current = controls
 
-    // Add lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
-    scene.add(ambientLight)
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5)
-    directionalLight.position.set(10, 10, 10)
-    scene.add(directionalLight)
-
-    // Perform PCA
-    const reducedVectors = performPCA([vector1.dimensions, vector2.dimensions])
-
-    // Create vector arrows with labels
-    const createVector = (points: number[], color: THREE.ColorRepresentation, label: string) => {
-      const [x, y, z] = points
-      const length = Math.sqrt(x * x + y * y + z * z)
-      const direction = new THREE.Vector3(x, y, z).normalize()
-
-      const arrowHelper = new THREE.ArrowHelper(
-        direction,
-        new THREE.Vector3(0, 0, 0),
-        length,
-        color,
-        length * 0.2,
-        length * 0.1,
-      )
-
-      // Create and position label
-      const labelDiv = document.createElement('div')
-      labelDiv.className = 'label'
-      labelDiv.textContent = label
-      labelDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'
-      labelDiv.style.padding = '5px 10px'
-      labelDiv.style.borderRadius = '4px'
-      labelDiv.style.color = '#000'
-      labelDiv.style.fontSize = '12px'
-      const labelObject = new CSS2DObject(labelDiv)
-
-      // Position label at the tip of the arrow
-      const tipPosition = new THREE.Vector3(
-        direction.x * length,
-        direction.y * length,
-        direction.z * length,
-      )
-      labelObject.position.copy(tipPosition)
-
-      scene.add(arrowHelper)
-      scene.add(labelObject)
-    }
-
-    // Add vectors with labels
-    createVector(reducedVectors[0], 0xff0000, 'User Preference') // Red for vector1
-    createVector(reducedVectors[1], 0x0000ff, 'This Story') // Blue for vector2
+    // Add coordinate grid
+    const gridHelper = new THREE.GridHelper(10, 10, 0x888888, 0x444444)
+    scene.add(gridHelper)
 
     // Add coordinate axes
-    const axesHelper = new THREE.AxesHelper(2)
+    const axesHelper = new THREE.AxesHelper(5)
     scene.add(axesHelper)
+
+    // Function to perform PCA reduction
+    const reduce = (): [[number, number, number], [number, number, number]] => {
+      const pca = new PCA()
+      const data = [userVector, storyVector]
+      pca.fit(data)
+      const [reducedUserVector, reducedStoryVector] = pca.transform(data)
+      console.log('post pca', userVector, reducedUserVector, storyVector, reducedStoryVector)
+
+      return [reducedUserVector, reducedStoryVector] as [
+        [number, number, number],
+        [number, number, number],
+      ]
+    }
+
+    // Create vector arrows
+    const createVector = (points: [number, number, number], color: number): THREE.Mesh[] => {
+      const [x, y, z] = points
+      const length = Math.sqrt(x * x + y * y + z * z)
+
+      // Create arrow body
+      const bodyGeometry = new THREE.CylinderGeometry(0.01, 0.01, length, 8)
+      const bodyMaterial = new THREE.MeshPhongMaterial({ color })
+      const body = new THREE.Mesh(bodyGeometry, bodyMaterial)
+
+      // Create arrow head
+      const headGeometry = new THREE.ConeGeometry(0.05, 0.2, 8)
+      const headMaterial = new THREE.MeshPhongMaterial({ color })
+      // const head = new THREE.Mesh(headGeometry, headMaterial)
+
+      // // Position and rotate arrow components
+      // body.position.set(x / 2, y / 2, z / 2)
+      // body.lookAt(new THREE.Vector3(x, y, z))
+      // // body.rotateX(Math.PI / 2)
+      //
+      // head.position.set(x, y, z)
+      // head.lookAt(new THREE.Vector3(x, y, z))
+      // // head.rotateX(Math.PI / 2)
+      //
+      // return [body, head]
+    }
+
+    // Perform PCA reduction
+    const [userVectorReduced, storyVectorReduced] = reduce()
+
+    // Add vectors to scene
+    // const userVectorParts = createVector(userVectorReduced, THREE.Color.NAMES.blue)
+    // const storyVectorParts = createVector(storyVectorReduced, THREE.Color.NAMES.red)
+    // console.log(userVectorReduced, storyVectorReduced)
+    // userVectorParts.forEach((part) => scene.add(part))
+    // storyVectorParts.forEach((part) => scene.add(part))
+    //
+
+    const threeUserVector = new THREE.Vector3(...userVector)
+    const userVectorObj = new THREE.ArrowHelper(
+      threeUserVector.clone().normalize(),
+      undefined,
+      threeUserVector.clone().length(),
+      0x0000ff,
+    )
+    scene.add(userVectorObj)
+
+    const threeStoryVector = new THREE.Vector3(...storyVector)
+    const storyVectorObj = new THREE.ArrowHelper(
+      threeStoryVector.clone().normalize(),
+      undefined,
+      threeStoryVector.clone().length(),
+      0x0000ff,
+    )
+    scene.add(storyVectorObj)
+
+    // Add lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
+    scene.add(ambientLight)
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
+    directionalLight.position.set(2, 4, 2)
+    scene.add(directionalLight)
 
     // Animation loop
     const animate = () => {
       requestAnimationFrame(animate)
-      controls.update()
-      renderer.render(scene, camera)
-      labelRenderer.render(scene, camera)
+      if (controlsRef.current) {
+        controlsRef.current.update()
+      }
+      if (rendererRef.current && sceneRef.current) {
+        rendererRef.current.render(sceneRef.current, camera)
+      }
     }
     animate()
 
-    // Handle window resize
+    // Handle resize
     const handleResize = () => {
-      if (!containerRef.current) return
+      const container = containerRef.current
+      const renderer = rendererRef.current
+      if (!container || !renderer) return
 
-      const width = containerRef.current.clientWidth
-      const height = containerRef.current.clientHeight
-
-      if (cameraRef.current) {
-        cameraRef.current.aspect = width / height
-        cameraRef.current.updateProjectionMatrix()
-      }
-
-      if (rendererRef.current) {
-        rendererRef.current.setSize(width, height)
-      }
-
-      if (labelRendererRef.current) {
-        labelRendererRef.current.setSize(width, height)
-      }
+      camera.aspect = container.clientWidth / container.clientHeight
+      camera.updateProjectionMatrix()
+      renderer.setSize(container.clientWidth, container.clientHeight)
     }
     window.addEventListener('resize', handleResize)
 
     // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize)
-      if (containerRef.current) {
-        if (rendererRef.current) {
-          containerRef.current.removeChild(rendererRef.current.domElement)
-        }
-        if (labelRendererRef.current) {
-          containerRef.current.removeChild(labelRendererRef.current.domElement)
-        }
+      const container = containerRef.current
+      const renderer = rendererRef.current
+      if (container && renderer) {
+        container.removeChild(renderer.domElement)
+        renderer.dispose()
       }
-      scene.clear()
+      if (sceneRef.current) {
+        sceneRef.current.clear()
+      }
     }
-  }, [vector1, vector2])
+  }, [storyVector, userVector])
 
   return <div ref={containerRef} style={{ width: '100%', height: '500px', position: 'relative' }} />
 }
 
-export default MiniMap
+export { MiniMap }

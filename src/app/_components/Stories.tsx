@@ -3,6 +3,7 @@
 import { useStorage } from '~/lib/hooks/useStorage'
 import { api } from '~/trpc/react'
 import { Story } from './Story'
+import { MiniMap } from './MiniMap'
 
 export function Stories() {
   const {
@@ -29,7 +30,12 @@ export function Stories() {
     return <div>No more stories today</div>
   }
 
-  return <Story story={story} />
+  return (
+    <>
+      <Story story={story} />
+      <MiniMap userVector={embedding} storyVector={story.embedding} />
+    </>
+  )
 }
 
 const compressVector = (vector: number[]) => {
