@@ -44,7 +44,7 @@ const initialState: State = {
     lastVisited: Date.now(),
   },
   personality: {
-    embedding: Array.from({ length: 384 }, () => Math.random()),
+    embedding: Array.from({ length: 384 }, () => Math.random() * 2 - 1), // generate random embedding in range [-1, 1]
     bigFive: {
       openness: 50,
       conscientiousness: 50,
