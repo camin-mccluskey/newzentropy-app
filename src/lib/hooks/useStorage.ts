@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import { useLocalStorage } from 'usehooks-ts'
 import { type Story } from '~/app/data/types'
+import { mapToOcean } from '../interpretability/map-to-ocean'
 
 const KEY = 'newzentropy-storage'
 
@@ -94,6 +95,13 @@ export function useStorage() {
       setState((value) => ({
         ...value,
         personality: { ...value.personality, embedding: newUserEmbedding },
+      }))
+      setState((value) => ({
+        ...value,
+        personality: {
+          ...value.personality,
+          bigFive: mapToOcean(newUserEmbedding),
+        },
       }))
     },
     [setState, state.personality.embedding],

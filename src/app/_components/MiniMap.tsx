@@ -3,7 +3,6 @@
 import React, { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import { PCA } from '~/lib/pca'
 
 interface MiniMapProps {
   userVector: number[]
@@ -32,7 +31,7 @@ const MiniMap: React.FC<MiniMapProps> = ({ userVector, storyVector }) => {
       0.1,
       1000,
     )
-    camera.position.set(2, 2, 4)
+    camera.position.set(2, 2, 2)
 
     // Setup renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true })
@@ -53,73 +52,21 @@ const MiniMap: React.FC<MiniMapProps> = ({ userVector, storyVector }) => {
     const axesHelper = new THREE.AxesHelper(5)
     scene.add(axesHelper)
 
-    // Function to perform PCA reduction
-    const reduce = (): [[number, number, number], [number, number, number]] => {
-      const pca = new PCA()
-      const data = [userVector, storyVector]
-      pca.fit(data)
-      const [reducedUserVector, reducedStoryVector] = pca.transform(data)
-      console.log('post pca', userVector, reducedUserVector, storyVector, reducedStoryVector)
-
-      return [reducedUserVector, reducedStoryVector] as [
-        [number, number, number],
-        [number, number, number],
-      ]
-    }
-
-    // Create vector arrows
-    const createVector = (points: [number, number, number], color: number): THREE.Mesh[] => {
-      const [x, y, z] = points
-      const length = Math.sqrt(x * x + y * y + z * z)
-
-      // Create arrow body
-      const bodyGeometry = new THREE.CylinderGeometry(0.01, 0.01, length, 8)
-      const bodyMaterial = new THREE.MeshPhongMaterial({ color })
-      const body = new THREE.Mesh(bodyGeometry, bodyMaterial)
-
-      // Create arrow head
-      const headGeometry = new THREE.ConeGeometry(0.05, 0.2, 8)
-      const headMaterial = new THREE.MeshPhongMaterial({ color })
-      // const head = new THREE.Mesh(headGeometry, headMaterial)
-
-      // // Position and rotate arrow components
-      // body.position.set(x / 2, y / 2, z / 2)
-      // body.lookAt(new THREE.Vector3(x, y, z))
-      // // body.rotateX(Math.PI / 2)
-      //
-      // head.position.set(x, y, z)
-      // head.lookAt(new THREE.Vector3(x, y, z))
-      // // head.rotateX(Math.PI / 2)
-      //
-      // return [body, head]
-    }
-
-    // Perform PCA reduction
-    const [userVectorReduced, storyVectorReduced] = reduce()
-
-    // Add vectors to scene
-    // const userVectorParts = createVector(userVectorReduced, THREE.Color.NAMES.blue)
-    // const storyVectorParts = createVector(storyVectorReduced, THREE.Color.NAMES.red)
-    // console.log(userVectorReduced, storyVectorReduced)
-    // userVectorParts.forEach((part) => scene.add(part))
-    // storyVectorParts.forEach((part) => scene.add(part))
-    //
-
-    const threeUserVector = new THREE.Vector3(...userVector)
+    const threeUserVector = new THREE.Vector3(...userVector.map((v) => v * 10))
     const userVectorObj = new THREE.ArrowHelper(
       threeUserVector.clone().normalize(),
       undefined,
       threeUserVector.clone().length(),
-      0x0000ff,
+      THREE.Color.NAMES.blue,
     )
     scene.add(userVectorObj)
 
-    const threeStoryVector = new THREE.Vector3(...storyVector)
+    const threeStoryVector = new THREE.Vector3(...storyVector.map((v) => v * 10))
     const storyVectorObj = new THREE.ArrowHelper(
       threeStoryVector.clone().normalize(),
       undefined,
       threeStoryVector.clone().length(),
-      0x0000ff,
+      THREE.Color.NAMES.red,
     )
     scene.add(storyVectorObj)
 
@@ -170,7 +117,7 @@ const MiniMap: React.FC<MiniMapProps> = ({ userVector, storyVector }) => {
     }
   }, [storyVector, userVector])
 
-  return <div ref={containerRef} style={{ width: '100%', height: '500px', position: 'relative' }} />
+  return <div ref={containerRef} style={{ width: '100%', height: '300px', position: 'relative' }} />
 }
 
 export { MiniMap }
