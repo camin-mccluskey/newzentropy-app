@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import { Badge } from '~/components/ui/badge'
 
 interface MiniMapProps {
   userVector: number[]
@@ -117,7 +118,15 @@ const MiniMap: React.FC<MiniMapProps> = ({ userVector, storyVector }) => {
     }
   }, [storyVector, userVector])
 
-  return <div ref={containerRef} style={{ width: '100%', height: '300px', position: 'relative' }} />
+  return (
+    <>
+      <div ref={containerRef} style={{ width: '100%', height: '300px', position: 'relative' }} />
+      <div className="inline-flex w-full justify-between">
+        <Badge className="bg-blue-500 text-white">Your preference</Badge>
+        <Badge className="bg-red-500 text-white">This story</Badge>
+      </div>
+    </>
+  )
 }
 
 export { MiniMap }
